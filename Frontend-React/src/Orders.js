@@ -1,18 +1,19 @@
 // src/pages/Order.js
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // For navigation to the product page
+import { useNavigate } from 'react-router-dom';
 import axios from './axios';
 
 const Order = () => {
     const [orders, setOrders] = useState([]);
     const [products, setProducts] = useState([]);
     const [newOrder, setNewOrder] = useState({
+        customer_id: '',
         product_id: '',
         quantity: 1,
         status: ''
     });
-    const navigate = useNavigate(); // Navigation hook
+    const navigate = useNavigate();
 
     // Fetch orders and products when component mounts
     useEffect(() => {
@@ -27,7 +28,7 @@ const Order = () => {
 
         const fetchProducts = async () => {
             try {
-                const response = await axios.get('products/');
+                const response = await axios.get('/products/');
                 setProducts(response.data);
             } catch (error) {
                 console.error('Error fetching products:', error);
@@ -50,7 +51,6 @@ const Order = () => {
     // Handle form submission to add a new order
     const handleAddOrder = async (event) => {
         event.preventDefault();
-        
         try {
             const response = await axios.post('/orders/', newOrder);
             setOrders((prevOrders) => [...prevOrders, response.data]); // Add new order to the list
@@ -58,15 +58,22 @@ const Order = () => {
         } catch (error) {
             console.error('Error adding order:', error);
             if (error.response && error.response.status === 401) {
-                // Redirect to login page if token is expired
                 navigate('/login');
             }
         }
     };
 
-    // Redirect to product page
-    const handleGoToProducts = () => {
-        navigate('/home'); // Adjust to your products page route
+    // Handle delete order
+    const handleDeleteOrder = async (orderId) => {
+        try {
+            await axios.delete(`/orders/${orderId}/`);
+            setOrders((prevOrders) => prevOrders.filter(order => order.id !== orderId));
+        } catch (error) {
+            console.error('Error deleting order:', error);
+            if (error.response && error.response.status === 401) {
+                navigate('/login');
+            }
+        }
     };
 
     return (
@@ -81,6 +88,8 @@ const Order = () => {
                         <p>Customer ID: {order.customer_id}</p>
                         <p>Quantity: {order.quantity}</p>
                         <p>Status: {order.status}</p>
+                        {/* Delete button */}
+                        <button onClick={() => handleDeleteOrder(order.id)}>Delete Order</button>
                     </li>
                 ))}
             </ul>
@@ -97,7 +106,7 @@ const Order = () => {
                     >
                         <option value="">Select a product</option>
                         {products.map((product) => (
-                            <option key={product.id} value={product.id}> {/* Update to product.id */}
+                            <option key={product.id} value={product.id}>
                                 {product.name}
                             </option>
                         ))}
@@ -119,7 +128,7 @@ const Order = () => {
                 <label>
                     Status:
                     <select
-                        name="status" // Update to 'status' instead of 'product_id'
+                        name="status"
                         value={newOrder.status}
                         onChange={handleInputChange}
                         required
@@ -133,8 +142,7 @@ const Order = () => {
                 <button type="submit">Add Order</button>
             </form>
 
-            {/* Add button to navigate to the Products page */}
-            <button onClick={handleGoToProducts}>Go to Products Page</button>
+            <button onClick={() => navigate('/home')}>Go to Products Page</button>
         </div>
     );
 };

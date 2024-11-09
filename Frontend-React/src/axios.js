@@ -1,25 +1,37 @@
 // src/axios.js
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
-// Create the Axios instance with the base URL
+import axios from 'axios';
+
 const instance = axios.create({
-    baseURL: 'http://127.0.0.1:8000', // or your Django API base URL
+    baseURL: 'http://127.0.0.1:8000', // Adjust the baseURL if needed
 });
 
-// Add a response interceptor to handle token expiration
-instance.interceptors.response.use(
-    response => response,
-    error => {
-        if (error.response && error.response.status === 401) {
-            // Remove the token from localStorage (or wherever it's stored)
-            localStorage.removeItem('token');
-
-            // Redirect to login page
-            window.location.href = '/login'; // Using window.location for simplicity
+// Intercept every request to add the authorization token
+instance.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
         }
-        return Promise.reject(error);
-    }
+        return config;
+    },
+    (error) => Promise.reject(error)
 );
 
 export default instance;
+
+
+// src/axios.js
+// import axios from 'axios';
+
+// const instance = axios.create({
+//     baseURL: 'http://127.0.0.1:8000', // Replace with your backend URL
+// });
+
+// // Retrieve token from local storage or any other secure location
+// const token = localStorage.getItem('accessToken');
+// if (token) {
+//     instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+// }
+
+// export default instance;
