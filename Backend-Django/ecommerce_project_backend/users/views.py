@@ -14,7 +14,6 @@ class UserId(APIView):  # Inherit from APIView
     # user = request.user
     # serializer = UserSerializer(user)
     # return Response(serializer.data)
-
     permission_classes = [IsAuthenticated]  # Apply permissions
 
     def get(self, request):  # Define the GET method
